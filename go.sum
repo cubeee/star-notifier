@@ -1,0 +1,4 @@
+github.com/cubeee/ent-notifier v0.0.0-20250813152538-4b07a0a5b11c h1:ACmv1mj/11N6wnOlJXfGL2Neu8YFaQRO8REQXApERsE=
+github.com/cubeee/ent-notifier v0.0.0-20250813152538-4b07a0a5b11c/go.mod h1:FvrSqahJEIfchIfgZURJaivbLO6QClvzzhNMd3uG1u0=
+golang.org/x/image v0.30.0 h1:jD5RhkmVAnjqaCUXfbGBrn3lpxbknfN9w2UhHHU+5B4=
+golang.org/x/image v0.30.0/go.mod h1:SAEUTxCCMWSrJcCy/4HwavEsfZZJlYxeHLc6tTiAe/c=

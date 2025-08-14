@@ -1,0 +1,16 @@
+layers_osrs/deaths/
+layers_osrs/implings/
+layers_osrs/locations/
+layers_osrs/mapsquares/
+layers_osrs/multimap/
+layers_osrs/nomove/
+/data/
+/misc/
+*.png
+*_test.go
+*.iml
+Dockerfile
+README.md
+.*
+
+!layers_osrs/mapsquares/-1/2/0_*

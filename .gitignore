@@ -1,0 +1,7 @@
+.git/
+.idea/
+/layers_osrs/*
+/data/
+/misc/
+*.iml
+publish.sh

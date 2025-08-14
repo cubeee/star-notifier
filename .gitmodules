@@ -1,0 +1,3 @@
+[submodule "layers_osrs"]
+	path = layers_osrs
+	url = https://github.com/mejrs/layers_osrs
