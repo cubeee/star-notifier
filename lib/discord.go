@@ -41,15 +41,19 @@ func PostStarListing(currentStars *[]*Star, webhookUrls []string, database *db.D
 
 		listingMessageId := database.GetListingMessage(url)
 		if listingMessageId == nil || len(*listingMessageId) == 0 {
-			fmt.Println("Listing message does not exist for url", url, "-- posting new message...")
+			log.Println("Listing message does not exist for url", url, "-- posting new message...")
 			postListingMessage(listingMessage, url, database)
 		} else {
-			fmt.Println("Listing message stored for", url, "-- updating...")
-			_, err := editMessage(url, *listingMessageId, listingMessage)
+			log.Println("Listing message stored for", url, "-- updating...")
+			statusCode, err := editMessage(url, *listingMessageId, listingMessage)
 			if err != nil {
-				fmt.Println("Failed to edit listing message to", url, "-- posting new listing message")
-				fmt.Println(err)
-				postListingMessage(listingMessage, url, database)
+				if statusCode == http.StatusNotFound {
+					log.Println("Failed to edit listing message to", url, "-- posting new listing message")
+					log.Println(err)
+					postListingMessage(listingMessage, url, database)
+				} else {
+					log.Println("Failed to edit listing message to url", url, "--", err)
+				}
 			}
 		}
 	}
