@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"slices"
 	"star-notifier/lib"
 	"star-notifier/lib/db"
@@ -20,21 +21,21 @@ func main() {
 
 	stars, err := lib.GetStars()
 	if err != nil {
-		fmt.Println("Failed to get star list on start", err)
+		log.Println("Failed to get star list on start", err)
 	}
 	previousStars := stars
 
 	for {
 		now := time.Now().Unix()
-		fmt.Println("Running cycle...", now)
+		log.Println("Running cycle...", now)
 
 		deleteOldStarMessages(database)
 
 		if (now - lastStarCheck) >= int64(lib.SleepTime) {
-			fmt.Println("Checking stars...")
+			log.Println("Checking stars...")
 			stars, err = lib.GetStars()
 			if err != nil {
-				fmt.Println("failed to get stars:", err)
+				log.Println("failed to get stars:", err)
 				waitLoop()
 				lastStarCheck = now
 				continue
@@ -44,7 +45,7 @@ func main() {
 			if (now - lastListingUpdate) >= int64(lib.ListingUpdateInterval*60) {
 				err = updateListing(stars, database)
 				if err != nil {
-					fmt.Println("Failed to update listing", err)
+					log.Println("Failed to update listing", err)
 					waitLoop()
 					lastStarCheck = now
 					listingUpdated = true
@@ -60,7 +61,7 @@ func main() {
 				if previousStars != nil && !slices.ContainsFunc(*previousStars, func(prev *lib.Star) bool {
 					return star.CalledLocation == prev.CalledLocation && star.Location == prev.Location && star.World == prev.World
 				}) {
-					fmt.Println("- NEW STAR", *star)
+					log.Println("- NEW STAR", *star)
 					newStars = append(newStars, star)
 				}
 			}
@@ -68,14 +69,14 @@ func main() {
 			if len(newStars) > 0 {
 				if !listingUpdated {
 					if err = updateListing(stars, database); err != nil {
-						fmt.Println("Failed to update listing after new star", err)
+						log.Println("Failed to update listing after new star", err)
 					}
 					lastListingUpdate = now
 				}
 
 				err := lib.PostNewStars(&newStars, lib.WebhookUrls, now, database)
 				if err != nil {
-					fmt.Println("Failed to post new stars", err)
+					log.Println("Failed to post new stars", err)
 					waitLoop()
 					lastStarCheck = now
 					continue
@@ -95,11 +96,11 @@ func deleteOldStarMessages(database *db.Database) {
 		return
 	}
 
-	fmt.Printf("Removing %d old message(s)\n", len(*oldMessages))
+	log.Printf("Removing %d old message(s)\n", len(*oldMessages))
 	for _, message := range *oldMessages {
 		err := lib.DeleteMessage(message.WebhookUrl, message.MessageId)
 		if err != nil {
-			fmt.Printf("failed to delete message %s from %s: %f\n", message.MessageId, message.WebhookUrl, err)
+			log.Printf("failed to delete message %s from %s: %f\n", message.MessageId, message.WebhookUrl, err)
 		}
 		time.Sleep(1 * time.Second)
 	}

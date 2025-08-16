@@ -1,7 +1,7 @@
 package lib
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -19,7 +19,7 @@ func GetEnvInt(key string, fallback int) int {
 	value := GetEnv(key, strconv.Itoa(fallback))
 	intValue, err := strconv.Atoi(value)
 	if err != nil {
-		fmt.Println("Failed to read env var into an int")
+		log.Println("Failed to read env var into an int")
 		panic(err)
 	}
 	return intValue

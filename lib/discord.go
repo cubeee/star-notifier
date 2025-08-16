@@ -7,6 +7,7 @@ import (
 	mapLib "github.com/cubeee/ent-notifier/lib"
 	"image/png"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"slices"
@@ -63,7 +64,7 @@ func PostNewStars(stars *[]*Star, webhookUrls []string, timestamp int64, databas
 		url, roleId := getWebhookUrl(url)
 		message, err := createNewStarMessage(stars, roleId)
 		if err != nil {
-			fmt.Println(fmt.Sprintf("failed to create new star message for %s: %f", url, err))
+			log.Println(fmt.Sprintf("failed to create new star message for %s: %f", url, err))
 			continue
 		}
 		postNewStarMessage(message, url, timestamp, database)
@@ -74,7 +75,7 @@ func PostNewStars(stars *[]*Star, webhookUrls []string, timestamp int64, databas
 func postListingMessage(message *DiscordMessage, webhookUrl string, database *db.Database) {
 	messageId, err := postMessage(webhookUrl, message)
 	if err != nil {
-		fmt.Println("Failed to post listing webhook to url", webhookUrl, err)
+		log.Println("Failed to post listing webhook to url", webhookUrl, err)
 	}
 	if len(messageId) > 0 {
 		database.SetListingMessage(webhookUrl, messageId)
@@ -85,7 +86,7 @@ func postListingMessage(message *DiscordMessage, webhookUrl string, database *db
 func postNewStarMessage(message *DiscordMessage, webhookUrl string, timestamp int64, database *db.Database) {
 	messageId, err := postMessage(webhookUrl, message)
 	if err != nil {
-		fmt.Println("Failed to post new star webhook to url", webhookUrl, err)
+		log.Println("Failed to post new star webhook to url", webhookUrl, err)
 	}
 	if len(messageId) > 0 {
 		database.AddNewStarMessage(webhookUrl, messageId, timestamp)

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"slices"
 	"time"
@@ -89,7 +90,7 @@ func Load(filePath string) (*Database, error) {
 	} else {
 		err = json.Unmarshal(fileContent, &dbContent)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			return nil, fmt.Errorf("failed to unmarshal db file content: %w", err)
 		}
 	}
