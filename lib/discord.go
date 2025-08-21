@@ -162,11 +162,8 @@ func createCurrentStarsMessage(stars *[]*Star) (*DiscordMessage, error) {
 
 		content += line + "\n"
 
-		location := GetStarLocation(star.CalledLocation)
-		if location != nil {
-			if !slices.Contains(starLocations, location) {
-				starLocations = append(starLocations, location)
-			}
+		if !slices.Contains(starLocations, star.MappedLocation) {
+			starLocations = append(starLocations, star.MappedLocation)
 		}
 	}
 

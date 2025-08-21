@@ -15,7 +15,7 @@ var StarLocations map[string]StarLocation
 func init() {
 	StarLocations = make(map[string]StarLocation)
 	StarLocations["south east"] = StarLocation{X: 1745, Y: 2954}
-	StarLocations["hunter"] = StarLocation{X: 1487, Y: 3090}
+	StarLocations["hunter guild"] = StarLocation{X: 1487, Y: 3090}
 	StarLocations["colosseum"] = StarLocation{X: 1773, Y: 3102}
 	StarLocations["salvager overlook"] = StarLocation{X: 1627, Y: 3275}
 	StarLocations["aldarin"] = StarLocation{X: 1422, Y: 2874}

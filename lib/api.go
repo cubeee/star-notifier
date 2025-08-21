@@ -13,6 +13,7 @@ import (
 type Star struct {
 	Location       int
 	CalledLocation string
+	MappedLocation *StarLocation
 	Tier           int
 	World          int
 	CalledAt       int64
@@ -41,9 +42,14 @@ func GetStars() (*[]*Star, error) {
 		if !slices.Contains(AllowedLocations, strconv.Itoa(star.Location)) {
 			continue
 		}
+		mappedLocation := GetStarLocation(star.CalledLocation)
+		if mappedLocation == nil {
+			continue
+		}
 		stars = append(stars, &Star{
 			Location:       star.Location,
 			CalledLocation: star.CalledLocation,
+			MappedLocation: mappedLocation,
 			Tier:           star.Tier,
 			World:          star.World,
 			CalledAt:       int64(star.CalledAt),
