@@ -37,15 +37,23 @@ func GetStars() (*[]*Star, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stars: %f", err)
 	}
+	now := time.Now().Unix()
 	var stars []*Star
 	for _, star := range *response {
+		depleteTime := int64(star.CalledAt) + int64(star.Tier*420)
+		if depleteTime < now {
+			continue
+		}
+
 		if !slices.Contains(AllowedLocations, strconv.Itoa(star.Location)) {
 			continue
 		}
+
 		mappedLocation := GetStarLocation(star.CalledLocation)
 		if mappedLocation == nil {
 			continue
 		}
+
 		stars = append(stars, &Star{
 			Location:       star.Location,
 			CalledLocation: star.CalledLocation,
