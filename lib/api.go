@@ -45,6 +45,10 @@ func GetStars() (*[]*Star, error) {
 			continue
 		}
 
+		if slices.Contains(ExcludedWorlds, strconv.Itoa(star.World)) {
+			continue
+		}
+
 		if !slices.Contains(AllowedLocations, strconv.Itoa(star.Location)) {
 			continue
 		}

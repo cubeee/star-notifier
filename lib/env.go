@@ -18,4 +18,5 @@ var (
 	WebhookUrls           = GetEnvList("DISCORD_WEBHOOK_URLS", ",")
 	ListingFooter         = GetEnv("LISTING_FOOTER", "")
 	NewStarMessageMaxAge  = GetEnvInt("NEW_STAR_MESSAGE_MAX_AGE", 50)
+	ExcludedWorlds        = GetEnvList("EXCLUDED_WORLDS", ",")
 )
