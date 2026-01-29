@@ -27,5 +27,8 @@ func GetEnvInt(key string, fallback int) int {
 
 func GetEnvList(key string, delimiter string) []string {
 	value := GetEnv(key, "")
+	if len(value) == 0 {
+		return []string{}
+	}
 	return strings.Split(value, delimiter)
 }
