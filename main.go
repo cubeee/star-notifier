@@ -19,7 +19,7 @@ func main() {
 	lastListingUpdate := int64(0)
 	lastStarCheck := int64(0)
 
-	stars, err := lib.GetStars()
+	stars, forceUpdateListing, err := lib.GetStars()
 	if err != nil {
 		log.Println("Failed to get star list on start", err)
 	}
@@ -33,7 +33,7 @@ func main() {
 
 		if (now - lastStarCheck) >= int64(lib.SleepTime) {
 			log.Println("Checking stars...")
-			stars, err = lib.GetStars()
+			stars, forceUpdateListing, err = lib.GetStars()
 			if err != nil {
 				log.Println("failed to get stars:", err)
 				waitLoop()
@@ -42,7 +42,10 @@ func main() {
 			}
 
 			listingUpdated := false
-			if (now - lastListingUpdate) >= int64(lib.ListingUpdateInterval*60) {
+			if forceUpdateListing || (now-lastListingUpdate) >= int64(lib.ListingUpdateInterval*60) {
+				if forceUpdateListing {
+					log.Println("Force updating listing...")
+				}
 				err = updateListing(stars, database)
 				if err != nil {
 					log.Println("Failed to update listing", err)

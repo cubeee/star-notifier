@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"slices"
 	"strconv"
@@ -32,18 +33,16 @@ type StarsResponse struct {
 	MaxTime        int64   `json:"maxTime"`
 }
 
-func GetStars() (*[]*Star, error) {
+func GetStars() (*[]*Star, bool, error) {
 	response, err := getStars(ApiUrl)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get stars: %f", err)
+		return nil, false, fmt.Errorf("failed to get stars: %f", err)
 	}
 	now := time.Now().Unix()
+	forceUpdateListing := false
 	var stars []*Star
 	for _, star := range *response {
 		depleteTime := int64(star.CalledAt) + int64(star.Tier*420)
-		if depleteTime < now {
-			continue
-		}
 
 		if len(ExcludedWorlds) > 0 && slices.Contains(ExcludedWorlds, strconv.Itoa(star.World)) {
 			continue
@@ -55,6 +54,12 @@ func GetStars() (*[]*Star, error) {
 
 		mappedLocation := GetStarLocation(star.CalledLocation)
 		if mappedLocation == nil {
+			continue
+		}
+
+		if depleteTime < now {
+			log.Println("Mapped but depleted star found, force listing update...")
+			forceUpdateListing = true
 			continue
 		}
 
@@ -70,7 +75,7 @@ func GetStars() (*[]*Star, error) {
 			DepleteTime:    int64(star.CalledAt) + int64(star.Tier*420),
 		})
 	}
-	return &stars, nil
+	return &stars, forceUpdateListing, nil
 }
 
 func getStars(url string) (*[]*StarsResponse, error) {
