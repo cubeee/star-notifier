@@ -18,6 +18,7 @@ func main() {
 		LastDowntime:      nil,
 		LastStarCheck:     0,
 		LastListingUpdate: 0,
+		NewStarsSeen:      0,
 	}
 	go checker.MonitorStars()
 

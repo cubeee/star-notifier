@@ -13,6 +13,7 @@ type StarsNotifier struct {
 	LastStarCheck     int64
 	LastListingUpdate int64
 	LastDowntime      *int64
+	NewStarsSeen      int
 }
 
 func (s *StarsNotifier) MonitorStars() {
@@ -55,11 +56,11 @@ func (s *StarsNotifier) MonitorStars() {
 
 			var newStars []*Star
 
-			for _, star := range *stars {
+			for num, star := range *stars {
 				if s.stars != nil && !slices.ContainsFunc(*s.stars, func(prev *Star) bool {
 					return star.CalledLocation == prev.CalledLocation && star.Location == prev.Location && star.World == prev.World
 				}) {
-					log.Println("- NEW STAR", *star)
+					log.Printf("- NEW STAR (#%d) %v\n", s.NewStarsSeen+num+1, *star)
 					newStars = append(newStars, star)
 				}
 			}
@@ -82,6 +83,7 @@ func (s *StarsNotifier) MonitorStars() {
 			}
 			s.stars = stars
 			s.LastStarCheck = now
+			s.NewStarsSeen = s.NewStarsSeen + len(newStars)
 		}
 
 		s.waitLoop()
