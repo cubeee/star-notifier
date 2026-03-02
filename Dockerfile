@@ -12,7 +12,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o buil
 FROM debian:bullseye-20250721-slim
 WORKDIR /app/
 
-RUN apt-get update && apt-get -y --no-install-recommends install tini ca-certificates \
+RUN apt-get update && apt-get -y --no-install-recommends install tini ca-certificates curl \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
