@@ -16,52 +16,68 @@ func main() {
 	}
 	defer saveDb(database)
 
-	lastListingUpdate := int64(0)
-	lastStarCheck := int64(0)
+	checker := StarsNotifier{}
+	go checker.MonitorStars()
+}
 
+func saveDb(database *db.Database) {
+	err := database.Save()
+	if err != nil {
+		panic(err)
+	}
+}
+
+type StarsNotifier struct {
+	database          *db.Database
+	stars             *[]*lib.Star
+	lastStarCheck     int64
+	lastListingUpdate int64
+}
+
+func (s *StarsNotifier) MonitorStars() {
 	stars, forceUpdateListing, err := lib.GetStars()
 	if err != nil {
 		log.Println("Failed to get star list on start", err)
 	}
-	previousStars := stars
+	s.stars = stars
 
 	for {
 		now := time.Now().Unix()
 		log.Println("Running cycle...", now)
 
-		deleteOldStarMessages(database)
+		s.deleteOldStarMessages(s.database)
 
-		if (now - lastStarCheck) >= int64(lib.SleepTime) {
+		if (now - s.lastStarCheck) >= int64(lib.SleepTime) {
 			log.Println("Checking stars...")
 			stars, forceUpdateListing, err = lib.GetStars()
 			if err != nil {
 				log.Println("failed to get stars:", err)
-				waitLoop()
-				lastStarCheck = now
+				s.waitLoop()
+				s.lastStarCheck = now
 				continue
 			}
 
 			listingUpdated := false
-			if forceUpdateListing || (now-lastListingUpdate) >= int64(lib.ListingUpdateInterval*60) {
+			if forceUpdateListing || (now-s.lastListingUpdate) >= int64(lib.ListingUpdateInterval*60) {
 				if forceUpdateListing {
 					log.Println("Force updating listing...")
 				}
-				err = updateListing(stars, database)
+				err = s.updateListing(stars, s.database)
 				if err != nil {
 					log.Println("Failed to update listing", err)
-					waitLoop()
-					lastStarCheck = now
+					s.waitLoop()
+					s.lastStarCheck = now
 					listingUpdated = true
 					continue
 				} else {
-					lastListingUpdate = now
+					s.lastListingUpdate = now
 				}
 			}
 
 			var newStars []*lib.Star
 
 			for _, star := range *stars {
-				if previousStars != nil && !slices.ContainsFunc(*previousStars, func(prev *lib.Star) bool {
+				if s.stars != nil && !slices.ContainsFunc(*s.stars, func(prev *lib.Star) bool {
 					return star.CalledLocation == prev.CalledLocation && star.Location == prev.Location && star.World == prev.World
 				}) {
 					log.Println("- NEW STAR", *star)
@@ -71,29 +87,29 @@ func main() {
 
 			if len(newStars) > 0 {
 				if !listingUpdated {
-					if err = updateListing(stars, database); err != nil {
+					if err = s.updateListing(stars, s.database); err != nil {
 						log.Println("Failed to update listing after new star", err)
 					}
-					lastListingUpdate = now
+					s.lastListingUpdate = now
 				}
 
-				err := lib.PostNewStars(&newStars, lib.WebhookUrls, now, database)
+				err := lib.PostNewStars(&newStars, lib.WebhookUrls, now, s.database)
 				if err != nil {
 					log.Println("Failed to post new stars", err)
-					waitLoop()
-					lastStarCheck = now
+					s.waitLoop()
+					s.lastStarCheck = now
 					continue
 				}
 			}
-			previousStars = stars
-			lastStarCheck = now
+			s.stars = stars
+			s.lastStarCheck = now
 		}
 
-		waitLoop()
+		s.waitLoop()
 	}
 }
 
-func deleteOldStarMessages(database *db.Database) {
+func (s *StarsNotifier) deleteOldStarMessages(database *db.Database) {
 	oldMessages := database.GetOldNewStarMessages(lib.NewStarMessageMaxAge)
 	if len(*oldMessages) == 0 {
 		return
@@ -111,18 +127,11 @@ func deleteOldStarMessages(database *db.Database) {
 	database.SaveUnsafe()
 }
 
-func updateListing(stars *[]*lib.Star, database *db.Database) error {
+func (s *StarsNotifier) updateListing(stars *[]*lib.Star, database *db.Database) error {
 	err := lib.PostStarListing(stars, lib.WebhookUrls, database)
 	return err
 }
 
-func waitLoop() {
+func (s *StarsNotifier) waitLoop() {
 	time.Sleep(time.Duration(lib.SleepTime) * time.Second)
-}
-
-func saveDb(database *db.Database) {
-	err := database.Save()
-	if err != nil {
-		panic(err)
-	}
 }
