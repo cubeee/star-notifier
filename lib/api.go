@@ -59,7 +59,7 @@ func GetStars() (*[]*Star, bool, error) {
 
 		if depleteTime < now {
 			log.Println("Mapped but depleted star found, force listing update...")
-			forceUpdateListing = true
+			forceUpdateListing = false
 			continue
 		}
 
