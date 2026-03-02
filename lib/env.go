@@ -19,4 +19,5 @@ var (
 	ListingFooter         = GetEnv("LISTING_FOOTER", "")
 	NewStarMessageMaxAge  = GetEnvInt("NEW_STAR_MESSAGE_MAX_AGE", 50)
 	ExcludedWorlds        = GetEnvList("EXCLUDED_WORLDS", ",")
+	WebPort               = GetEnvInt("WEB_PORT", 8080)
 )

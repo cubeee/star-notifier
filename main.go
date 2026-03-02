@@ -13,8 +13,20 @@ func main() {
 	}
 	defer saveDb(database)
 
-	checker := lib.StarsNotifier{}
+	checker := &lib.StarsNotifier{
+		Database:          database,
+		LastDowntime:      nil,
+		LastStarCheck:     0,
+		LastListingUpdate: 0,
+	}
 	go checker.MonitorStars()
+
+	web := lib.Web{
+		Notifier: checker,
+	}
+	if err = web.Start(); err != nil {
+		panic(err)
+	}
 }
 
 func saveDb(database *db.Database) {

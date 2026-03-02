@@ -33,7 +33,7 @@ type StarsResponse struct {
 	MaxTime        int64   `json:"maxTime"`
 }
 
-func GetStars() (*[]*Star, bool, error) {
+func GetStars(lastDowntime *int64) (*[]*Star, bool, error) {
 	response, err := getStars(ApiUrl)
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to get stars: %f", err)
@@ -59,7 +59,11 @@ func GetStars() (*[]*Star, bool, error) {
 
 		if depleteTime < now {
 			log.Println("Mapped but depleted star found, force listing update...")
-			forceUpdateListing = false
+			forceUpdateListing = false // disabled for now
+			continue
+		}
+
+		if lastDowntime != nil && int64(star.CalledAt) <= *lastDowntime {
 			continue
 		}
 

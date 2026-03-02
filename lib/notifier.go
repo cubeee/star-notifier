@@ -8,14 +8,15 @@ import (
 )
 
 type StarsNotifier struct {
-	database          *db.Database
+	Database          *db.Database
 	stars             *[]*Star
-	lastStarCheck     int64
-	lastListingUpdate int64
+	LastStarCheck     int64
+	LastListingUpdate int64
+	LastDowntime      *int64
 }
 
 func (s *StarsNotifier) MonitorStars() {
-	stars, forceUpdateListing, err := GetStars()
+	stars, forceUpdateListing, err := GetStars(s.LastDowntime)
 	if err != nil {
 		log.Println("Failed to get star list on start", err)
 	}
@@ -25,32 +26,30 @@ func (s *StarsNotifier) MonitorStars() {
 		now := time.Now().Unix()
 		log.Println("Running cycle...", now)
 
-		s.deleteOldStarMessages(s.database)
+		s.deleteOldStarMessages()
 
-		if (now - s.lastStarCheck) >= int64(SleepTime) {
+		if (now - s.LastStarCheck) >= int64(SleepTime) {
 			log.Println("Checking stars...")
-			stars, forceUpdateListing, err = GetStars()
+			stars, forceUpdateListing, err = GetStars(s.LastDowntime)
 			if err != nil {
 				log.Println("failed to get stars:", err)
 				s.waitLoop()
-				s.lastStarCheck = now
+				s.LastStarCheck = now
 				continue
 			}
 
 			listingUpdated := false
-			if forceUpdateListing || (now-s.lastListingUpdate) >= int64(ListingUpdateInterval*60) {
-				if forceUpdateListing {
-					log.Println("Force updating listing...")
-				}
-				err = s.updateListing(stars, s.database)
+			if forceUpdateListing || (now-s.LastListingUpdate) >= int64(ListingUpdateInterval*60) {
+				log.Println("Updating listings... forced:", forceUpdateListing)
+				err = s.updateListing(stars, s.Database)
 				if err != nil {
 					log.Println("Failed to update listing", err)
 					s.waitLoop()
-					s.lastStarCheck = now
+					s.LastStarCheck = now
 					listingUpdated = true
 					continue
 				} else {
-					s.lastListingUpdate = now
+					s.LastListingUpdate = now
 				}
 			}
 
@@ -67,30 +66,30 @@ func (s *StarsNotifier) MonitorStars() {
 
 			if len(newStars) > 0 {
 				if !listingUpdated {
-					if err = s.updateListing(stars, s.database); err != nil {
+					if err = s.updateListing(stars, s.Database); err != nil {
 						log.Println("Failed to update listing after new star", err)
 					}
-					s.lastListingUpdate = now
+					s.LastListingUpdate = now
 				}
 
-				err := PostNewStars(&newStars, WebhookUrls, now, s.database)
+				err := PostNewStars(&newStars, WebhookUrls, now, s.Database)
 				if err != nil {
 					log.Println("Failed to post new stars", err)
 					s.waitLoop()
-					s.lastStarCheck = now
+					s.LastStarCheck = now
 					continue
 				}
 			}
 			s.stars = stars
-			s.lastStarCheck = now
+			s.LastStarCheck = now
 		}
 
 		s.waitLoop()
 	}
 }
 
-func (s *StarsNotifier) deleteOldStarMessages(database *db.Database) {
-	oldMessages := database.GetOldNewStarMessages(NewStarMessageMaxAge)
+func (s *StarsNotifier) deleteOldStarMessages() {
+	oldMessages := s.Database.GetOldNewStarMessages(NewStarMessageMaxAge)
 	if len(*oldMessages) == 0 {
 		return
 	}
@@ -103,8 +102,8 @@ func (s *StarsNotifier) deleteOldStarMessages(database *db.Database) {
 		}
 		time.Sleep(1 * time.Second)
 	}
-	database.RemoveNewStarMessages(oldMessages)
-	database.SaveUnsafe()
+	s.Database.RemoveNewStarMessages(oldMessages)
+	s.Database.SaveUnsafe()
 }
 
 func (s *StarsNotifier) updateListing(stars *[]*Star, database *db.Database) error {
