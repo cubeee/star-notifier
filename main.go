@@ -15,7 +15,7 @@ func main() {
 
 	checker := &lib.StarsNotifier{
 		Database:          database,
-		LastDowntime:      nil,
+		LastDowntime:      0,
 		LastStarCheck:     0,
 		LastListingUpdate: 0,
 		NewStarsSeen:      0,
