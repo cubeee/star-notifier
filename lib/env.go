@@ -18,6 +18,7 @@ var (
 	WebhookUrls           = GetEnvList("DISCORD_WEBHOOK_URLS", ",")
 	ListingFooter         = GetEnv("LISTING_FOOTER", "")
 	NewStarMessageMaxAge  = GetEnvInt("NEW_STAR_MESSAGE_MAX_AGE", 50)
-	ExcludedWorlds        = GetEnvList("EXCLUDED_WORLDS", ",")
 	WebPort               = GetEnvInt("WEB_PORT", 8080)
+	WorldsUrl             = os.Getenv("WORLDS_URL")
+	WorldUpdateInterval   = GetEnvInt("WORLD_UPDATE_INTERVAL", 60*60)
 )

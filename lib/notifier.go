@@ -12,26 +12,36 @@ type StarsNotifier struct {
 	stars             *[]*Star
 	LastStarCheck     int64
 	LastListingUpdate int64
-	LastDowntime      *int64
+	LastDowntime      int64
+	LastWorldUpdate   int64
 	NewStarsSeen      int
 }
 
 func (s *StarsNotifier) MonitorStars() {
-	stars, forceUpdateListing, err := GetStars(s.LastDowntime)
+	now := time.Now().Unix()
+
+	excludedWorlds, err := GetExcludedWorlds()
+	if err != nil {
+		log.Println("Failed to get excluded worlds", err)
+	}
+	s.LastWorldUpdate = now
+	log.Println("Fetched excluded worlds:", len(*excludedWorlds))
+
+	stars, forceUpdateListing, err := GetStars(s.LastDowntime, excludedWorlds)
 	if err != nil {
 		log.Println("Failed to get star list on start", err)
 	}
 	s.stars = stars
 
 	for {
-		now := time.Now().Unix()
+		now = time.Now().Unix()
 		log.Println("Running cycle...", now)
 
 		s.deleteOldStarMessages()
 
 		if (now - s.LastStarCheck) >= int64(SleepTime) {
-			log.Println("Checking stars...")
-			stars, forceUpdateListing, err = GetStars(s.LastDowntime)
+			log.Printf("Checking stars... (excluded worlds: %d)\n", len(*excludedWorlds))
+			stars, forceUpdateListing, err = GetStars(s.LastDowntime, excludedWorlds)
 			if err != nil {
 				log.Println("failed to get stars:", err)
 				s.waitLoop()
@@ -66,6 +76,14 @@ func (s *StarsNotifier) MonitorStars() {
 			}
 
 			if len(newStars) > 0 {
+				if (now - s.LastWorldUpdate) >= int64(WorldUpdateInterval) {
+					excludedWorlds, err = GetExcludedWorlds()
+					if err != nil {
+						log.Println("Failed to update excluded worlds", err)
+					}
+					s.LastWorldUpdate = now
+				}
+
 				if !listingUpdated {
 					if err = s.updateListing(stars, s.Database); err != nil {
 						log.Println("Failed to update listing after new star", err)
